@@ -1,0 +1,7 @@
+Development:-
+1- mongoose for schema creation and validation
+2- validator package to validate custom validation (isEmail()..ect)
+3- express package to create server
+4- postman to create http req between client(postMan) and server(express)
+5- Create Router using express
+6- 
