@@ -1,10 +1,6 @@
 const express = require('express')
 // create router from express
 const router = new express.Router()
-// setup routes
-// router.get('/test', (req, res) => {
-//     res.send("Hi from user route")
-// })
 const User = require('./../model/user')
 
 /*******************************User Route*************************/
@@ -17,8 +13,6 @@ router.post('/users', (req, res) => {
     }).catch((e) => {
         res.status(400).send(e)
     })
-    // console.log(req.body)
-    // res.send('testing')
 })
 
 // Get users
@@ -57,18 +51,34 @@ router.patch('/users/:id', (req, res) => {
     if (!isValidOperation) {
         return res.status(400).send("error: Invalid updates!")
     }
+
     const _id = req.params.id
     // find user by id that return user or nothing
     // Model.findByIdAndUpdate(id,filed updated,option)
-    User.findByIdAndUpdate(_id, req.body, {
-        new: true,
-        runValidators:true
-    }).then((user) => {
-        if (!user) {
-            return res.status(404).send()
-        }
+    // findByIdAndUpdate() perform direct operation on DB SO we use runValidators
+    // User.findByIdAndUpdate(_id, req.body, {
+    //     new: true,
+    //     runValidators:true
+    // }).then((user) => {
+    //     if (!user) {
+    //         return res.status(404).send()
+    //     }
 
-        res.status(302).send(user)
+    //     res.status(302).send(user)
+    // }).catch((e) => {
+    //     res.status(500).send(e)
+    // })
+
+    User.findById(_id).then((user) => {
+        // apply user update
+        updates.forEach((update) => {
+            //update => email | password ..
+            // user.name = WHAT !! we can't set it static
+            user[update] = req.body[update]
+        })
+        return user.save()
+    }).then((data) => {
+        res.status(201).send(data)
     }).catch((e) => {
         res.status(500).send(e)
     })

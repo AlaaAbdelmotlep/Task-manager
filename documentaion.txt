@@ -4,4 +4,6 @@ Development:-
 3- express package to create server
 4- postman to create http req between client(postMan) and server(express)
 5- Create Router using express
-6- 
+6- using bycrpt to hashing password
+7- mongoose MiddelWare (pre,post)
+8-
