@@ -6,4 +6,10 @@ Development:-
 5- Create Router using express
 6- using bycrpt to hashing password
 7- mongoose MiddelWare (pre,post)
-8-
+8- define ourOwn statics function on Schema
+9- JWT to generate token for spacifc user (methods)
+10- add token property in user Schema to save all user token
+11- express MW 
+ => without MW : new req -> run route handler
+ => with MW : new req -> do something -> run route handler
+12- 

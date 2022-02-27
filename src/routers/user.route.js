@@ -1,27 +1,60 @@
 const express = require('express')
 // create router from express
 const router = new express.Router()
-const User = require('./../model/user')
+// userModel
+const User = require('../model/user.model')
+// auth MW
+const auth = require('./../middelware/auth')
 
 /*******************************User Route*************************/
-// Create User
-router.post('/users', (req, res) => {
+// Create User => sign up
+router.post('/users', async (req, res) => {
     const user = new User(req.body)
-    // req.body => { name: 'Alaa Tawfik', email: 'alaa@gmail.com', age: 25 }
-    user.save().then(() => {
-        res.status(201).send(user)
-    }).catch((e) => {
+    try {
+        await user.save()
+        const token = await user.generateAuthToken()
+        res.status(201).send({ user, token })
+    } catch(e) {
         res.status(400).send(e)
-    })
+    }
 })
 
+// User login => login
+router.post('/users/login', async (req, res) => {
+    try {
+        // define findByCredentials
+        const user = await User.findByCredentials(req.body.email, req.body.password)
+        // generateAuthToken() will be avaliable on instance not Model
+        // we need to provide token for spacifc user
+        const token = await user.generateAuthToken()
+        res.send({user , token})
+    } catch(e) {
+        res.status(400).send(e)
+    }
+})
+
+// user logout
+router.post('/users/logout', auth, async (req, res) => {
+    // once we authenticated we have access to user data
+    try {
+        
+        
+    } catch (e) {
+        
+    }
+})
+
+// with MW : new req -> do something( if next() ) -> run route handler
 // Get users
-router.get('/users', (req, res) => {
-    User.find({}).then((users) => {
-        res.send(users) // array of users
-    }).catch((e) => {
-        res.status(500).send(e)
-    })
+router.get('/users/me', auth ,(req, res) => {
+    // User.find({}).then((users) => {
+    //     res.send(users) // array of users
+    // }).catch((e) => {
+    //     res.status(500).send(e)
+    // })
+    // As above loggedin user will have access to show all users profile SO
+    // we need user to show up his own profile 
+    res.send(req.user)
 })
 
 // Get user

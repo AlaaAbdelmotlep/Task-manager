@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken')
 
 // we spearte schema from model to take advantage of using mongoose MW 
 const userSchema = new mongoose.Schema(
@@ -12,6 +13,7 @@ const userSchema = new mongoose.Schema(
     },
     email: {
         type: String,
+        unique: true,
         required: true,
         trim: true,
         lowercase:true,
@@ -43,9 +45,44 @@ const userSchema = new mongoose.Schema(
                 throw new Error ('Age must be gratter than zero')
             }
         }
-    }
+        },
+        tokens: [{
+            token: {
+                type: String,
+                required: true
+            }
+        }]
 }
 )
+
+// create token and send it back to user
+userSchema.methods.generateAuthToken = async function () {
+    const user = this
+    const token = jwt.sign({ _id: user._id.toString() }, 'taskmangerapi')
+
+    // save generated token to user tokens
+    user.tokens = user.tokens.concat({ token })
+    // make sure token is saved
+    await user.save()
+    return token
+}
+
+// Set findByCredentials functionality
+userSchema.statics.findByCredentials = async (email,password) => {
+    // find by email
+    // const user = await User.findOne({email : email})
+    const user = await User.findOne({ email }) // return user
+    if (!user) {
+        throw new Error('Unable to login')
+    }
+    // find by password
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+        throw new Error('Unable to login')
+    }
+
+    return user
+}
 
 // set action before data saved
 // userSchema.pre(event, funtion NOT arrow)

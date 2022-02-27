@@ -1,6 +1,6 @@
 const express = require('express');
 const router = new express.Router()
-const Task = require('./../model/task')
+const Task = require('../model/task.model')
 
 /*******************************Task Route*************************/
 
