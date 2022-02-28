@@ -34,13 +34,43 @@ router.post('/users/login', async (req, res) => {
 })
 
 // user logout
-router.post('/users/logout', auth, async (req, res) => {
+router.post('/users/logout', auth , async (req, res) => {
     // once we authenticated we have access to user data
     try {
-        
+        // get auth token 
+        // we need to give user premmision to logout from all sessions
+        req.user.tokens = req.user.tokens.filter((token) => {
+            return token.token !== req.token
+        })
+        // if true => tokens will remain same
+        // if false => token will delete
+        // need to save changes in DB
+        // we don't have user instead we have req.user
+        await req.user.save()
+        res.send()
         
     } catch (e) {
+        res.status(400).send(e)
         
+    }
+})
+
+// User logoutall
+router.post('/users/logoutall', auth, async (req, res) => {
+    try{
+        // const isAuth = req.user.tokens.includes(req.token)
+        // if (isAuth) {
+        //     req.user.tokens = []
+        // await req.user.save()
+        // res.send()
+        // }
+
+        req.user.tokens = []
+        await req.user.save()
+        res.send()
+    
+    } catch (e) {
+        res.status(400).send(e)
     }
 })
 
@@ -57,24 +87,8 @@ router.get('/users/me', auth ,(req, res) => {
     res.send(req.user)
 })
 
-// Get user
-router.get('/users/:id', (req, res) => {
-    // console.log(req.params)  //{ id: '3' }
-    const _id = req.params.id;
-
-    User.findById(_id).then((user) => {
-        // check if user exist or not
-        if (!user) {
-            return res.status(404).send()
-        }
-        res.status(200).send(user)
-    }).catch((e) => {
-        res.status(500).send(e)
-    })
-})
-
 // Update user
-router.patch('/users/:id', (req, res) => {
+router.patch('/users/me', auth, async (req, res) => {
     // update not valid keys
     const updates = Object.keys(req.body)
     const allwoedUpdates = ['name', 'email', 'password', 'age']
@@ -85,7 +99,8 @@ router.patch('/users/:id', (req, res) => {
         return res.status(400).send("error: Invalid updates!")
     }
 
-    const _id = req.params.id
+    // const _id = req.user._id
+
     // find user by id that return user or nothing
     // Model.findByIdAndUpdate(id,filed updated,option)
     // findByIdAndUpdate() perform direct operation on DB SO we use runValidators
@@ -102,29 +117,32 @@ router.patch('/users/:id', (req, res) => {
     //     res.status(500).send(e)
     // })
 
-    User.findById(_id).then((user) => {
+    // User.findById(_id).then((user) => {
         // apply user update
+    try {
         updates.forEach((update) => {
             //update => email | password ..
             // user.name = WHAT !! we can't set it static
-            user[update] = req.body[update]
+            req.user[update] = req.body[update]
         })
-        return user.save()
-    }).then((data) => {
-        res.status(201).send(data)
-    }).catch((e) => {
-        res.status(500).send(e)
-    })
+        await req.user.save()
+        res.send(req.user)
+    } catch (e) {
+        res.status(400).send(e)
+    }
 })
 
 // Delete User
-router.delete('/users/:id', (req, res) => {
-    const _id = req.params.id
+router.delete('/users/me', auth, (req, res) => {
+    const _id = req.user._id
     User.findByIdAndDelete(_id).then((user) => {
-        if (!user) {
-            return res.status(404).send()
-        }
-        res.status(302).send(user)
+        // NO need to check user, we have auth user
+        // if (!user) {
+        //     return res.status(404).send()
+        // }
+        
+        // req.user.remove(); mongoose method
+        res.status(302).send(req.user)
     }).catch((e) => {
         res.status(500).send(e)
     })

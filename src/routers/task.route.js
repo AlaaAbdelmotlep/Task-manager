@@ -1,11 +1,13 @@
 const express = require('express');
 const router = new express.Router()
+
+const auth = require('./../middelware/auth')
 const Task = require('../model/task.model')
 
 /*******************************Task Route*************************/
 
 // Create task creation endpoints
-router.post('/tasks', (req, res) => {
+router.post('/tasks', auth, (req, res) => {
     const task = new Task(req.body)
 
     task.save().then(() => {

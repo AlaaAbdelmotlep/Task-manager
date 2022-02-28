@@ -25,6 +25,8 @@ const auth = async (req, res, next) => {
         }
         // if user exist:-
         // give route access to get user
+        // send to to use it in logout
+        req.token = token
         req.user = user
         // console.log("Auth") 
         next()

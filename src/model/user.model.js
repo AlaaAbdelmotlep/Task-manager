@@ -55,6 +55,9 @@ const userSchema = new mongoose.Schema(
 }
 )
 
+
+// statics => model ,,,,,, methods => instance 
+
 // create token and send it back to user
 userSchema.methods.generateAuthToken = async function () {
     const user = this
@@ -66,6 +69,17 @@ userSchema.methods.generateAuthToken = async function () {
     await user.save()
     return token
 }
+
+// Hidden private data => tokens , password
+userSchema.methods.toJSON = function () {
+    const user = this
+    const userObject = user.toObject()
+
+    delete userObject.password
+    delete userObject.tokens
+
+    return userObject
+} 
 
 // Set findByCredentials functionality
 userSchema.statics.findByCredentials = async (email,password) => {
