@@ -4,7 +4,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Task = require('./task.model');
 
-// we spearte schema from model to take advantage of using mongoose MW 
 const userSchema = new mongoose.Schema(
 {
     name: {
@@ -53,28 +52,23 @@ const userSchema = new mongoose.Schema(
                 required: true
             }
         }]
+    }, {
+    timestamps: true
 }
 )
 
-// virtual property =>
-// Not date stored in DB, it is relathion between two entity
 userSchema.virtual('tasks', {
     ref: 'Task',
     localField: '_id',
     foreignField: 'owner'
 })
 
-
-// statics => model ,,,,,, methods => instance 
-
 // create token and send it back to user
 userSchema.methods.generateAuthToken = async function () {
     const user = this
     const token = jwt.sign({ _id: user._id.toString() }, 'taskmangerapi')
 
-    // save generated token to user tokens
     user.tokens = user.tokens.concat({ token })
-    // make sure token is saved
     await user.save()
     return token
 }
@@ -91,14 +85,12 @@ userSchema.methods.toJSON = function () {
 } 
 
 // Set findByCredentials functionality
-userSchema.statics.findByCredentials = async (email,password) => {
-    // find by email
-    // const user = await User.findOne({email : email})
-    const user = await User.findOne({ email }) // return user
+userSchema.statics.findByCredentials = async (email, password) => {
+    
+    const user = await User.findOne({ email }) 
     if (!user) {
         throw new Error('Unable to login')
     }
-    // find by password
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
         throw new Error('Unable to login')
@@ -107,21 +99,11 @@ userSchema.statics.findByCredentials = async (email,password) => {
     return user
 }
 
-// set action before data saved
-// userSchema.pre(event, funtion NOT arrow)
-// we need to access this (created user)
 userSchema.pre('save', async function (next) {
     const user = this
-
-    // password is changed or not! (update case)
-    // if password is hashed we not need to hashed it again
     if (user.isModified('password')) {
-        // console.log('isModified run')
         user.password = await bcrypt.hash(user.password, 8)
     }
-    // console.log('isModified not run')
-    // to make sure that data is saved(jump to next step)
-    // without next user will created but will never saved to DB
     next()
 })
 
