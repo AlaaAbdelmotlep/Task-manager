@@ -11,10 +11,11 @@ const Task = mongoose.model('Task', {
         type: Boolean,
         // required: false,
         default: false
-    },
+    },  // store the id of user who create it
     owner: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
+        type: mongoose.Types.ObjectId,
+        required: true,
+        ref: 'User'
     }
 })
 

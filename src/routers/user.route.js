@@ -134,12 +134,16 @@ router.patch('/users/me', auth, async (req, res) => {
 
 // Delete User
 router.delete('/users/me', auth, (req, res) => {
+
     const _id = req.user._id
     User.findByIdAndDelete(_id).then((user) => {
         // NO need to check user, we have auth user
-        // if (!user) {
-        //     return res.status(404).send()
-        // }
+        if (!user) {
+            return res.status(404).send()
+        }
+    
+    // Now we already have user after auth
+    // we don't have yet user variable, instead we have req.user
         
         // req.user.remove(); mongoose method
         res.status(302).send(req.user)

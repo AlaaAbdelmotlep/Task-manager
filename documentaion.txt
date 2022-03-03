@@ -12,4 +12,8 @@ Development:-
 11- express MW 
  => without MW : new req -> run route handler
  => with MW : new req -> do something -> run route handler
-12- 
+14- hidden private data (toJSON)
+15- log out all users
+12- Virtual Method & ref in schema
+13- refactore CRUD after auth
+

@@ -8,7 +8,13 @@ const Task = require('../model/task.model')
 
 // Create task creation endpoints
 router.post('/tasks', auth, (req, res) => {
-    const task = new Task(req.body)
+    // const task = new Task(req.body)
+    const task = new Task({
+        ...req.body, // dustriction (copy all properties from body to this object)
+        // hard code owner
+        // we have auth user, ahave accessiabilty to user object
+        owner : req.user._id 
+    })
 
     task.save().then(() => {
         res.status(201).send(task)
@@ -19,24 +25,38 @@ router.post('/tasks', auth, (req, res) => {
 })
 
 // Get all tasks 
-router.get('/tasks', (req, res) => {
-    Task.find({}).then((tasks) => {
-        res.send(tasks)
-    }).catch((e) => {
-        res.status(500).send(e)
-    })
+router.get('/tasks', auth, async (req, res) => {
+    // Task.find({owner : req.user._id}).then((tasks) => {
+    //     res.send(tasks)
+    // }).catch((e) => {
+    //     res.status(500).send(e)
+    // })
+
+    // OR
+
+    try {
+        await req.user.populate('tasks')
+        res.send(req.user.tasks)
+    } catch (e) {
+        res.status(500).send()
+    }
 })
 
 // Get task
-router.get('/tasks/:id', (req, res) => {
+router.get('/tasks/:id', auth, (req, res) => {
     const _id = req.params.id
 
-    Task.findById(_id).then((task) => {
-        // check if task exist
-        if (!task) {
-            return res.status(404).send()
-        }
+    // Task.findById(_id).then((task) => {
+    //     // check if task exist
+    //     if (!task) {
+    //         return res.status(404).send()
+    //     }
 
+    // user gets his own tasks
+    Task.findOne({ _id, owner : req.user._id }).then((task) => {
+        if (!task) {
+            res.send('No task found')
+        }
         res.status(200).send(task)
     }).catch((e) => {
         res.status(500).send(e)
@@ -44,7 +64,7 @@ router.get('/tasks/:id', (req, res) => {
 })
 
 // Update Task
-router.patch('/tasks/:id', (req, res) => {
+router.patch('/tasks/:id', auth, async (req, res) => {
     // update not valid keys
     const updates = Object.keys(req.body)
     const allwoedUpdates = ['discription', 'completed']
@@ -54,6 +74,7 @@ router.patch('/tasks/:id', (req, res) => {
     if (!isValidOperation) {
         return res.status(400).send('error: Invalid updates!')
     }
+
     const _id = req.params.id
     // Task.findByIdAndUpdate(_id, req.body, {
     //     new: true,
@@ -66,29 +87,54 @@ router.patch('/tasks/:id', (req, res) => {
     // }).catch((e) => {
     //     res.status(500).send(e)
     // })
-    Task.findById(_id).then((task) => {
-        updates.forEach((update) => {
-            task[update] = req.body[update]
-        })
-        return task.save()
-    }).then((data) => {
-        res.status(201).send(data)
-    }).catch((e) => {
+    // Ok we want to find task byID but also by owner
+    // Task.findOne({_id, owner: req.user._id})
+    // // Task.findById(_id).then((task) => {
+    //     updates.forEach((update) => {
+    //         task[update] = req.body[update]
+    //     })
+    //     return task.save()
+    // }).then((data) => {
+    //     res.status(201).send(data) }).
+    // catch ((e) => {
+    //     res.status(500).send(e)
+    // })
+    try {
+        const task = await Task.findOne({ _id, owner: req.user._id })
+
+        if (!task) {
+            return res.send("No task found")
+        }
+
+        updates.forEach((update) => task[update] = req.body[update])
+            await task.save()
+            res.send(task)
+    } catch (e) {
         res.status(500).send(e)
-    })
+    }
 })
 
 // Delete Task
-router.delete('/tasks/:id', (req, res) => {
+router.delete('/tasks/:id', auth, async (req, res) => {
     const _id = req.params.id
-    Task.findByIdAndDelete(_id).then((task) => {
-        if (!task) {
-            return res.status(404).send()
+    try {
+        const task = await Task.findOneAndDelete({ _id, owner: req.user._id })
+    if (!task) {
+        return res.send("No task found")
         }
-        res.status(302).send(task)
-    }).catch((e) => {
+        res.send(task)
+    } catch (e) {
         res.status(500).send(e)
-    })
+    }
+    
+    // Task.findByIdAndDelete(_id).then((task) => {
+    //     if (!task) {
+    //         return res.status(404).send()
+    //     }
+    //     res.status(302).send(task)
+    // }).catch((e) => {
+    //     res.status(500).send(e)
+    // })
 })
 
 module.exports = router

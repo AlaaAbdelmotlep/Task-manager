@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const Task = require('./task.model');
 
 // we spearte schema from model to take advantage of using mongoose MW 
 const userSchema = new mongoose.Schema(
@@ -54,6 +55,14 @@ const userSchema = new mongoose.Schema(
         }]
 }
 )
+
+// virtual property =>
+// Not date stored in DB, it is relathion between two entity
+userSchema.virtual('tasks', {
+    ref: 'Task',
+    localField: '_id',
+    foreignField: 'owner'
+})
 
 
 // statics => model ,,,,,, methods => instance 
@@ -113,6 +122,13 @@ userSchema.pre('save', async function (next) {
     // console.log('isModified not run')
     // to make sure that data is saved(jump to next step)
     // without next user will created but will never saved to DB
+    next()
+})
+
+// Delete User Tasks when account used
+userSchema.pre('remove', async function (next) {
+    const user = this
+    await Task.deleteMany({ owner: user._id })
     next()
 })
 

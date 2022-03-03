@@ -5,7 +5,12 @@ require('./db/mongoose')
 
 // require routers
 const userRouter = require('./routers/user.route')
-const taskRouter = require('./routers/task.route')
+const taskRouter = require('./routers/task.route');
+
+
+
+const Task = require('./model/task.model');
+const User = require('./model/user.model');
 
 // create server
 const app = express();
@@ -29,6 +34,20 @@ app.use(taskRouter)
 app.listen(port, () => {
     console.log(`Server is listen ${port}`)
 })
+
+
+// const main = async () => {
+    // get user info who created that task
+    // const task = await Task.findById("6220c0b5156bd284b32da192")
+    // await task.populate('owner')
+    // console.log(task)
+
+    // get taskes of user
+    // const user = await User.findById("6220c015ebed5040795d2701")
+    // await user.populate('tasks')
+    // console.log(user.tasks)
+// }
+// main()
 
 // Testing bcrypt
 // const bcrypt = require('bcrypt')
