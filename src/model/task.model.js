@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-// const validator = require('validator');
 
 // create task model
 const Task = mongoose.model('Task', {
@@ -12,6 +11,11 @@ const Task = mongoose.model('Task', {
         type: Boolean,
         // required: false,
         default: false
+    },  // store the id of user who create it
+    owner: {
+        type: mongoose.Types.ObjectId,
+        required: true,
+        ref: 'User'
     }
 })
 
